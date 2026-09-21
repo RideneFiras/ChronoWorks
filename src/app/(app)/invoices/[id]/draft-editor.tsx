@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Section } from "@/components/ui/page";
@@ -35,6 +36,7 @@ export function DraftEditor({
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const toast = useToast();
 
   const currency = invoice.currency as Currency;
   const money = (value: bigint) => formatMoney(value, currency, locale);
@@ -109,6 +111,7 @@ export function DraftEditor({
                   due_date: String(form.get("due_date") ?? invoice.due_date),
                 });
                 if (!result.ok) setError(result.reason ?? null);
+                else toast(t("saved"));
                 router.refresh();
               })
             }
@@ -202,6 +205,7 @@ export function DraftEditor({
                   const result = await issueInvoice(invoice.id);
                   setConfirming(false);
                   if (!result.ok) setError(result.reason ?? null);
+                  else toast(t("issued"));
                   router.refresh();
                 })
               }

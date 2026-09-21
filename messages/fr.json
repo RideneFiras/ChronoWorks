@@ -35,7 +35,8 @@
     "optional": "Facultatif",
     "required": "Obligatoire",
     "back": "Retour",
-    "none": "Aucun"
+    "none": "Aucun",
+    "noCountry": "Aucun pays"
   },
   "settings": {
     "title": "Paramètres",
@@ -233,7 +234,9 @@
     "filterAll": "Toutes",
     "saved": "Facture enregistrée",
     "numberClash": "Ce numéro de facture est déjà utilisé. Le compteur de numérotation est en retard sur vos factures existantes : lancez npm run seed pour le recaler, ou émettez sur une nouvelle année.",
-    "page": "Page"
+    "page": "Page",
+    "sentToast": "Facture marquée comme envoyée",
+    "paidToast": "Facture marquée comme payée"
   },
   "week": {
     "title": "Semaine",
@@ -262,7 +265,7 @@
     "close": "Fermer"
   },
   "timer": {
-    "start": "Démarrer le minuteur",
+    "start": "Démarrer",
     "stop": "Arrêter le minuteur",
     "running": "Minuteur en cours sur {project}",
     "stopped": "Minuteur arrêté",

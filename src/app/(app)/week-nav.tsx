@@ -6,11 +6,13 @@ import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { shiftWeek, thisWeekAnchor } from "@/lib/week";
+import { useLocale } from "next-intl";
 
 /** Previous, next, this week. Keyboard: [ and ] (DESIGN.md section 6). */
 export function WeekNav({ anchor, days }: { anchor: string; days: string[] }) {
   const t = useTranslations("week");
   const router = useRouter();
+  const locale = useLocale();
 
   const go = (weeks: number) => router.push(`/?w=${shiftWeek(anchor, weeks)}`);
 
@@ -26,7 +28,16 @@ export function WeekNav({ anchor, days }: { anchor: string; days: string[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anchor]);
 
-  const range = `${days[0]} → ${days[days.length - 1]}`;
+  // "21 – 27 sept. 2026" rather than two ISO dates.
+  const intl = locale === "fr" ? "fr-FR" : "en-GB";
+  const range = new Intl.DateTimeFormat(intl, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).formatRange(
+    new Date(`${days[0]}T00:00:00`),
+    new Date(`${days[days.length - 1]}T00:00:00`),
+  );
 
   return (
     <div className="flex items-center gap-2">

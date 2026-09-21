@@ -35,7 +35,8 @@
     "optional": "Optional",
     "required": "Required",
     "back": "Back",
-    "none": "None"
+    "none": "None",
+    "noCountry": "No country"
   },
   "settings": {
     "title": "Settings",
@@ -233,7 +234,9 @@
     "filterAll": "All",
     "saved": "Invoice saved",
     "numberClash": "That invoice number is already used. The numbering counter is behind the invoices you already have; run npm run seed to line it up, or issue from a fresh year.",
-    "page": "Page"
+    "page": "Page",
+    "sentToast": "Invoice marked as sent",
+    "paidToast": "Invoice marked as paid"
   },
   "week": {
     "title": "Week",
@@ -262,7 +265,7 @@
     "close": "Close"
   },
   "timer": {
-    "start": "Start the timer",
+    "start": "Start timer",
     "stop": "Stop the timer",
     "running": "Timer running on {project}",
     "stopped": "Timer stopped",

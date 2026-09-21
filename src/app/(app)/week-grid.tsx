@@ -198,11 +198,7 @@ export function WeekGrid({
                     return (
                       <td
                         key={date}
-                        className={cn(
-                          "h-11 p-0 text-center",
-                          leaveDays[date] && "hatched",
-                          date === today && "border-t-2 border-t-time",
-                        )}
+                        className={cn("h-11 p-0 text-center", leaveDays[date] && "hatched")}
                       >
                         {isEditing ? (
                           <input

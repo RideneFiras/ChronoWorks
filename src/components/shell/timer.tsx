@@ -141,14 +141,18 @@ export function Timer({
   if (!running) {
     return (
       <div className="relative flex items-center gap-3">
+        {/* The dial alone says nothing to someone opening Chrono for the
+            first time, so the verb sits next to it until a timer is running. */}
         <button
           type="button"
           onClick={() => setPicking((v) => !v)}
-          aria-label={t("start")}
           aria-expanded={picking}
-          className="flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-line text-ink-muted hover:border-brass hover:text-brass"
+          className="flex items-center gap-2 rounded-control py-1 pe-2 text-meta text-ink-muted hover:text-brass"
         >
-          <Play size={12} strokeWidth={1.5} />
+          <span className="flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-line">
+            <Play size={12} strokeWidth={1.5} />
+          </span>
+          {t("start")}
         </button>
 
         {picking ? (

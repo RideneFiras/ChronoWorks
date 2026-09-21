@@ -7,6 +7,7 @@ import { LOCALE_COOKIE, isLocale, type Locale } from "@/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import type { Currency, TaxProfile } from "@/lib/database.types";
 import type { FormState } from "@/lib/form-state";
+import { isCountry } from "@/lib/countries";
 
 
 const CURRENCIES: Currency[] = ["TND", "EUR", "USD"];
@@ -71,7 +72,11 @@ export async function saveSettings(
     .update({
       display_name: displayName,
       locale,
-      country: optional(form, "country"),
+      // only a known ISO code is stored: the invoice mentions compare it
+      country: (() => {
+        const value = optional(form, "country");
+        return isCountry(value) ? value : null;
+      })(),
       default_currency: oneOf<Currency>(form, "default_currency", CURRENCIES, "EUR"),
       tax_profile: oneOf<TaxProfile>(form, "tax_profile", TAX_PROFILES, "fr"),
       legal_name: optional(form, "legal_name"),

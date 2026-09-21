@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Section } from "@/components/ui/page";
+import { CountrySelect } from "@/components/ui/country-select";
 import type { ClientRow } from "@/lib/database.types";
 import { createClientRecord, updateClientRecord } from "./actions";
 import { emptyFormState, type FormState } from "@/lib/form-state";
@@ -54,7 +55,12 @@ export function ClientForm({
           </Field>
 
           <Field label={t("country")} htmlFor="country">
-            <Input id="country" name="country" defaultValue={client?.country ?? ""} />
+            <CountrySelect
+              id="country"
+              name="country"
+              defaultValue={client?.country}
+              placeholder={tCommon("noCountry")}
+            />
           </Field>
 
           <Field label={t("currency")} htmlFor="currency" help={t("currencyHelp")}>

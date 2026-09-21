@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -8,11 +8,24 @@ import { Section } from "@/components/ui/page";
 import type { ProfileRow } from "@/lib/database.types";
 import { saveSettings } from "./actions";
 import { emptyFormState } from "@/lib/form-state";
+import { useToast } from "@/components/ui/toast";
+import { CountrySelect } from "@/components/ui/country-select";
 
 export function SettingsForm({ profile }: { profile: ProfileRow }) {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
   const [state, action, pending] = useActionState(saveSettings, emptyFormState);
+  const toast = useToast();
+
+  // Announce the save once, when the status actually changes.
+  const announced = useRef<string | null>(null);
+  useEffect(() => {
+    if (state.status === "idle" || !state.message) return;
+    const key = `${state.status}:${state.message}`;
+    if (announced.current === key) return;
+    announced.current = key;
+    toast(state.message, state.status === "saved" ? "done" : "error");
+  }, [state.status, state.message, toast]);
 
   const taxIdHint =
     profile.tax_profile === "tn"
@@ -79,7 +92,12 @@ export function SettingsForm({ profile }: { profile: ProfileRow }) {
           </Field>
 
           <Field label={t("country")} htmlFor="country">
-            <Input id="country" name="country" defaultValue={profile.country ?? ""} />
+            <CountrySelect
+              id="country"
+              name="country"
+              defaultValue={profile.country}
+              placeholder={tCommon("noCountry")}
+            />
           </Field>
 
           <Field label={t("address")} htmlFor="address" className="sm:col-span-2">
@@ -166,11 +184,8 @@ export function SettingsForm({ profile }: { profile: ProfileRow }) {
         <Button type="submit" variant="primary" disabled={pending}>
           {pending ? tCommon("saving") : tCommon("save")}
         </Button>
-        {state.message ? (
-          <p
-            role="status"
-            className={state.status === "saved" ? "text-meta text-time" : "text-meta text-red"}
-          >
+        {state.status === "error" && state.message ? (
+          <p role="alert" className="text-meta text-red">
             {state.message}
           </p>
         ) : null}

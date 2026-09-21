@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { AppLocale, Currency } from "@/lib/database.types";
 import type { FormState } from "@/lib/form-state";
+import { isCountry } from "@/lib/countries";
 
 
 const CURRENCIES: Currency[] = ["TND", "EUR", "USD"];
@@ -38,7 +39,11 @@ async function readForm(form: FormData) {
       name: name ?? "",
       email: optional(form, "email"),
       address: optional(form, "address"),
-      country: optional(form, "country"),
+      // only a known ISO code is stored: the invoice mentions compare it
+      country: (() => {
+        const value = optional(form, "country");
+        return isCountry(value) ? value : null;
+      })(),
       tax_id: optional(form, "tax_id"),
       vat_number: optional(form, "vat_number"),
       notes: optional(form, "notes"),

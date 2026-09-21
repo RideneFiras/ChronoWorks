@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { setInvoiceStatus } from "../actions";
 
 /** An issued invoice is frozen. Only the status may move forward, and the PDF
@@ -20,11 +21,13 @@ export function IssuedActions({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   function move(next: "sent" | "paid") {
     start(async () => {
       const result = await setInvoiceStatus(invoiceId, next);
       if (!result.ok) setError(result.reason ?? null);
+      else toast(next === "sent" ? t("sentToast") : t("paidToast"));
       router.refresh();
     });
   }
