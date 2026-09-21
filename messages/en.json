@@ -362,5 +362,14 @@
     "timerBody": "Start it against a project and stopping it writes the entry into the week for you.",
     "invoicesTitle": "Invoice the time",
     "invoicesBody": "Pick a client and a period, and unbilled time becomes invoice lines. Issuing locks the invoice for good."
+  },
+  "period": {
+    "label": "Period",
+    "week": "This week",
+    "month": "This month",
+    "year": "This year",
+    "all": "All time",
+    "hours": "Hours",
+    "noneInPeriod": "No time in this period."
   }
 }

@@ -362,5 +362,14 @@
     "timerBody": "Démarrez-le sur un projet : à l'arrêt, la saisie est écrite dans la semaine.",
     "invoicesTitle": "Facturez le temps",
     "invoicesBody": "Choisissez un client et une période : le temps non facturé devient des lignes. L'émission verrouille la facture définitivement."
+  },
+  "period": {
+    "label": "Période",
+    "week": "Cette semaine",
+    "month": "Ce mois",
+    "year": "Cette année",
+    "all": "Tout",
+    "hours": "Heures",
+    "noneInPeriod": "Aucun temps sur cette période."
   }
 }

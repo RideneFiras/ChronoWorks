@@ -1,21 +1,28 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { EmptyState } from "@/components/ui/page";
+import { PeriodFilter } from "@/components/ui/period-filter";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatDuration, hoursPerDayFrom } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
+import { periodRange, readPeriod } from "@/lib/period";
 import { requireSession } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
 import { ProjectHeader } from "../project-header";
 
 export default async function ProjectTimePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ period?: string }>;
 }) {
   const { id } = await params;
+  const period = readPeriod((await searchParams).period);
+  const { from, to } = periodRange(period);
   const t = await getTranslations("week");
+  const tp = await getTranslations("period");
   const ti = await getTranslations("invoices");
   const tt = await getTranslations("tasks");
   const { profile } = await requireSession();
@@ -24,12 +31,15 @@ export default async function ProjectTimePage({
   const { data: project } = await supabase.from("projects").select("*").eq("id", id).maybeSingle();
   if (!project) notFound();
 
+  let entryQuery = supabase
+    .from("time_entries")
+    .select("*")
+    .eq("project_id", id)
+    .order("entry_date", { ascending: false });
+  if (from && to) entryQuery = entryQuery.gte("entry_date", from).lte("entry_date", to);
+
   const [{ data: entries }, { data: tasks }] = await Promise.all([
-    supabase
-      .from("time_entries")
-      .select("*")
-      .eq("project_id", id)
-      .order("entry_date", { ascending: false }),
+    entryQuery,
     supabase.from("tasks").select("id, title").eq("project_id", id),
   ]);
 
@@ -42,8 +52,12 @@ export default async function ProjectTimePage({
     <>
       <ProjectHeader project={project} locale={profile.locale} />
 
+      <div className="mb-4">
+        <PeriodFilter active={period} basePath={`/projects/${id}/time`} />
+      </div>
+
       {rows.length === 0 ? (
-        <EmptyState message={t("empty")} />
+        <EmptyState message={tp("noneInPeriod")} />
       ) : (
         <>
           <Table>
@@ -82,7 +96,7 @@ export default async function ProjectTimePage({
           </Table>
 
           <p className="mt-4 text-body text-ink-muted">
-            {t("total")}:{" "}
+            {tp(period)}:{" "}
             <span className="tabular font-medium text-ink">
               {formatDuration(total, { hoursPerDay, allowDays: false }, profile.locale)}
             </span>

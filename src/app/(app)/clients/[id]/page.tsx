@@ -3,9 +3,12 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState, PageHeader, Section } from "@/components/ui/page";
+import { PeriodFilter } from "@/components/ui/period-filter";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
+import { formatDuration, hoursPerDayFrom } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
+import { periodRange, readPeriod } from "@/lib/period";
 import { formatColumn } from "@/lib/money";
 import { requireSession } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
@@ -36,14 +39,19 @@ const invoiceStatusKey: Record<InvoiceStatus, string> = {
 
 export default async function ClientDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ period?: string }>;
 }) {
   const { id } = await params;
+  const period = readPeriod((await searchParams).period);
+  const { from, to } = periodRange(period);
   const t = await getTranslations("clients");
   const tp = await getTranslations("projects");
   const ti = await getTranslations("invoices");
   const ts = await getTranslations("settings");
+  const tper = await getTranslations("period");
   const { profile } = await requireSession();
 
   const supabase = await createClient();
@@ -62,6 +70,26 @@ export default async function ClientDetailPage({
   ]);
 
   if (!client) notFound();
+
+  // A client can have several projects, so the hours are totalled per project
+  // and then for the client as a whole.
+  const projectIds = (projects ?? []).map((p) => p.id);
+  let minutesByProject = new Map<string, number>();
+  if (projectIds.length > 0) {
+    let entryQuery = supabase
+      .from("time_entries")
+      .select("project_id, duration_minutes")
+      .in("project_id", projectIds);
+    if (from && to) entryQuery = entryQuery.gte("entry_date", from).lte("entry_date", to);
+
+    const { data: entries } = await entryQuery;
+    minutesByProject = (entries ?? []).reduce((acc, e) => {
+      acc.set(e.project_id, (acc.get(e.project_id) ?? 0) + e.duration_minutes);
+      return acc;
+    }, new Map<string, number>());
+  }
+  const clientMinutes = [...minutesByProject.values()].reduce((a, b) => a + b, 0);
+  const hoursPerDay = hoursPerDayFrom(profile.hours_per_day);
 
   const statusLabel: Record<ProjectStatus, string> = {
     active: tp("statusActive"),
@@ -112,6 +140,10 @@ export default async function ClientDetailPage({
         ) : null}
       </dl>
 
+      <div className="mb-4">
+        <PeriodFilter active={period} basePath={`/clients/${id}`} />
+      </div>
+
       <Section title={t("projects")} className="mb-8">
         {(projects ?? []).length === 0 ? (
           <EmptyState
@@ -128,6 +160,7 @@ export default async function ClientDetailPage({
               <TH>{tp("name")}</TH>
               <TH>{tp("status")}</TH>
               <TH>{tp("startDate")}</TH>
+              <TH align="end">{tper("hours")}</TH>
               <TH align="end">{tp("rateType")}</TH>
             </THead>
             <TBody>
@@ -142,6 +175,15 @@ export default async function ClientDetailPage({
                     <StatusPill tone={statusTone[p.status]} label={statusLabel[p.status]} />
                   </TD>
                   <TD className="text-ink-muted">{formatDate(p.start_date, profile.locale)}</TD>
+                  <TD numeric className={(minutesByProject.get(p.id) ?? 0) === 0 ? "text-ink-muted" : undefined}>
+                    {(minutesByProject.get(p.id) ?? 0) === 0
+                      ? "—"
+                      : formatDuration(
+                          minutesByProject.get(p.id) ?? 0,
+                          { hoursPerDay, allowDays: p.rate_type === "daily" },
+                          profile.locale,
+                        )}
+                  </TD>
                   <TD numeric>
                     {formatColumn(p.rate_amount, p.currency, profile.locale)}{" "}
                     <span className="font-normal text-ink-muted">{rateLabel[p.rate_type]}</span>
@@ -151,6 +193,17 @@ export default async function ClientDetailPage({
             </TBody>
           </Table>
         )}
+
+        {(projects ?? []).length > 0 ? (
+          <p className="mt-4 text-body text-ink-muted">
+            {tper(period)}:{" "}
+            <span className="tabular font-medium text-ink">
+              {clientMinutes === 0
+                ? tper("noneInPeriod")
+                : formatDuration(clientMinutes, { hoursPerDay, allowDays: false }, profile.locale)}
+            </span>
+          </p>
+        ) : null}
       </Section>
 
       <Section title={t("invoices")} className="mb-8">
