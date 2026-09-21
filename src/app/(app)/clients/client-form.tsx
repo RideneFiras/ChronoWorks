@@ -23,6 +23,7 @@ export function ClientForm({
 }) {
   const t = useTranslations("clients");
   const tCommon = useTranslations("common");
+  const tSettings = useTranslations("settings");
   const editing = Boolean(client);
 
   const [state, action, pending] = useActionState<ClientFormState, FormData>(
@@ -82,8 +83,8 @@ export function ClientForm({
               name="invoice_language"
               defaultValue={client?.invoice_language ?? "fr"}
             >
-              <option value="fr">Français</option>
-              <option value="en">English</option>
+              <option value="fr">{tSettings("languageFr")}</option>
+              <option value="en">{tSettings("languageEn")}</option>
             </Select>
           </Field>
 

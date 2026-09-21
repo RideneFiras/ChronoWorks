@@ -10,7 +10,6 @@
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const site = process.env.NEXT_PUBLIC_SITE_URL;
 
 function required(value: string | undefined, name: string): string {
   if (!value) {
@@ -24,4 +23,3 @@ function required(value: string | undefined, name: string): string {
 
 export const supabaseUrl = () => required(url, "NEXT_PUBLIC_SUPABASE_URL");
 export const supabaseAnonKey = () => required(anonKey, "NEXT_PUBLIC_SUPABASE_ANON_KEY");
-export const siteUrl = () => site ?? "http://localhost:3000";

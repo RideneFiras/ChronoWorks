@@ -82,7 +82,6 @@ cp .env.example .env.local
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API Keys → the `anon` / publishable key |
-| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Optional, only used by `npm run seed`. Never imported by app code. |
 
 `.env.local` and `.env` are both gitignored. The service role key is server-only
@@ -131,16 +130,38 @@ Re-run it after every migration.
 ## Seed data
 
 ```bash
-npm run seed
+npm run seed              # the only account, or --email to choose one
+npm run seed -- --reset   # clear that account's rows first
 ```
 
 Fills the signed-in account with a realistic freelancer's history: Tunisian and
-French clients, projects in TND and EUR with a real paused period, logged time
-across several weeks, leave including public holidays, a board with tasks, one
-issued invoice and one draft. Requires `SUPABASE_SERVICE_ROLE_KEY`.
+French clients, projects in TND and EUR including one with a real two-month
+paused period, logged time across five weeks, leave with public holidays and a
+half day, a board with tasks, and two draft invoices with lines.
 
-It is additive and safe to run on an empty account. Pass `--reset` to clear the
-account's rows first.
+Requires `SUPABASE_SERVICE_ROLE_KEY`. Re-running is safe: clients are matched by
+name and updated rather than duplicated.
+
+**It seeds drafts, never an issued invoice.** An invoice can only become issued
+through `issue_invoice()`, which reads `auth.uid()` and so needs a signed-in
+user; the service role the script uses has none. The triggers refuse every
+shortcut: a row inserted as `issued` has unwritable lines, and promoting a draft
+by hand raises `Use issue_invoice() to issue an invoice`. So you issue the seeded
+draft from the app, which exercises the numbering, the recomputed totals and the
+seller and buyer snapshot for real.
+
+For the same reason `--reset` cannot remove an invoice you have already issued,
+or the client it points at. It keeps both and says so. To clear one out of a
+development database, lift the lock for one transaction in the SQL Editor:
+
+```sql
+begin;
+select set_config('app.allow_locked_changes', 'on', true);
+delete from invoices where number = 'FA-2026-0001';
+commit;
+```
+
+Never do that against real data: those rows are what the lock exists to protect.
 
 ## Layout
 

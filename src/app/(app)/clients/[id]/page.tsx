@@ -9,7 +9,7 @@ import { formatDate } from "@/lib/format";
 import { formatColumn } from "@/lib/money";
 import { requireSession } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
-import type { ProjectStatus } from "@/lib/database.types";
+import type { InvoiceStatus, ProjectStatus } from "@/lib/database.types";
 import { ArchiveToggle } from "../archive-toggle";
 
 const statusTone = {
@@ -17,6 +17,22 @@ const statusTone = {
   paused: "paused",
   done: "done",
 } as const;
+
+const invoiceTone = {
+  draft: "draft",
+  issued: "issued",
+  sent: "issued",
+  paid: "paid",
+  cancelled: "cancelled",
+} as const;
+
+const invoiceStatusKey: Record<InvoiceStatus, string> = {
+  draft: "statusDraft",
+  issued: "statusIssued",
+  sent: "statusSent",
+  paid: "statusPaid",
+  cancelled: "statusCancelled",
+};
 
 export default async function ClientDetailPage({
   params,
@@ -26,6 +42,8 @@ export default async function ClientDetailPage({
   const { id } = await params;
   const t = await getTranslations("clients");
   const tp = await getTranslations("projects");
+  const ti = await getTranslations("invoices");
+  const ts = await getTranslations("settings");
   const { profile } = await requireSession();
 
   const supabase = await createClient();
@@ -74,7 +92,7 @@ export default async function ClientDetailPage({
         <Detail label={t("vatNumber")} value={client.vat_number} />
         <Detail
           label={t("invoiceLanguage")}
-          value={client.invoice_language === "fr" ? "Français" : "English"}
+          value={client.invoice_language === "fr" ? ts("languageFr") : ts("languageEn")}
         />
         {client.address ? (
           <div className="sm:col-span-3">
@@ -141,19 +159,26 @@ export default async function ClientDetailPage({
         ) : (
           <Table>
             <THead>
-              <TH>{tp("invoices")}</TH>
-              <TH>{tp("status")}</TH>
-              <TH align="end">{tp("rateAmount")}</TH>
+              <TH>{ti("number")}</TH>
+              <TH>{ti("issueDate")}</TH>
+              <TH>{ti("status")}</TH>
+              <TH align="end">{ti("total")}</TH>
             </THead>
             <TBody>
               {(invoices ?? []).map((inv) => (
                 <TR key={inv.id}>
                   <TD>
                     <Link href={`/invoices/${inv.id}`} className="text-ink hover:text-brass">
-                      {inv.number ?? "—"}
+                      {inv.number ?? ti("noNumber")}
                     </Link>
                   </TD>
                   <TD className="text-ink-muted">{formatDate(inv.issue_date, profile.locale)}</TD>
+                  <TD>
+                    <StatusPill
+                      tone={invoiceTone[inv.status]}
+                      label={ti(invoiceStatusKey[inv.status])}
+                    />
+                  </TD>
                   <TD numeric>{formatColumn(inv.total, inv.currency, profile.locale)}</TD>
                 </TR>
               ))}

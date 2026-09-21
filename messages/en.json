@@ -166,5 +166,25 @@
     "fixed": "fixed",
     "periodBetween": "From {from} to {to}",
     "periodSince": "Since {from}"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "number": "Number",
+    "issueDate": "Issue date",
+    "dueDate": "Due date",
+    "status": "Status",
+    "total": "Total",
+    "client": "Client",
+    "statusDraft": "Draft",
+    "statusIssued": "Issued",
+    "statusSent": "Sent",
+    "statusPaid": "Paid",
+    "statusCancelled": "Cancelled",
+    "statusOverdue": "Overdue",
+    "empty": "No invoices yet. Create one from unbilled time or from manual lines.",
+    "noNumber": "Not issued"
+  },
+  "week": {
+    "building": "The Week grid is being built. Log time from a project in the meantime."
   }
 }

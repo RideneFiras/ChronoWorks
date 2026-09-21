@@ -18,13 +18,18 @@ import {
 import { Wordmark } from "@/components/ui/logo";
 import { cn } from "@/lib/cn";
 
+/**
+ * `ready` is flipped on as each section lands, so the sidebar never offers a
+ * route that does not exist yet. Leave arrives with milestone 4 and invoices
+ * with milestone 6 (PRD section 11).
+ */
 const items = [
-  { href: "/", key: "week", Icon: CalendarDays },
-  { href: "/projects", key: "projects", Icon: Briefcase },
-  { href: "/clients", key: "clients", Icon: Users },
-  { href: "/invoices", key: "invoices", Icon: FileText },
-  { href: "/leave", key: "leave", Icon: TreePalm },
-  { href: "/settings", key: "settings", Icon: Settings },
+  { href: "/", key: "week", Icon: CalendarDays, ready: true },
+  { href: "/projects", key: "projects", Icon: Briefcase, ready: true },
+  { href: "/clients", key: "clients", Icon: Users, ready: true },
+  { href: "/invoices", key: "invoices", Icon: FileText, ready: false },
+  { href: "/leave", key: "leave", Icon: TreePalm, ready: false },
+  { href: "/settings", key: "settings", Icon: Settings, ready: true },
 ] as const;
 
 export function Sidebar({ displayName }: { displayName: string }) {
@@ -35,7 +40,7 @@ export function Sidebar({ displayName }: { displayName: string }) {
 
   const nav = (
     <nav className="flex flex-col gap-1" aria-label={t("menu")}>
-      {items.map(({ href, key, Icon }) => {
+      {items.filter((i) => i.ready).map(({ href, key, Icon }) => {
         const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (
           <Link

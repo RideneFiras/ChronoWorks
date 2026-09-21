@@ -166,5 +166,25 @@
     "fixed": "forfait",
     "periodBetween": "Du {from} au {to}",
     "periodSince": "Depuis le {from}"
+  },
+  "invoices": {
+    "title": "Factures",
+    "number": "Numéro",
+    "issueDate": "Date d'émission",
+    "dueDate": "Échéance",
+    "status": "Statut",
+    "total": "Total",
+    "client": "Client",
+    "statusDraft": "Brouillon",
+    "statusIssued": "Émise",
+    "statusSent": "Envoyée",
+    "statusPaid": "Payée",
+    "statusCancelled": "Annulée",
+    "statusOverdue": "En retard",
+    "empty": "Aucune facture. Créez-en une à partir du temps non facturé ou de lignes manuelles.",
+    "noNumber": "Non émise"
+  },
+  "week": {
+    "building": "La grille de la semaine est en cours de construction. Saisissez votre temps depuis un projet en attendant."
   }
 }
