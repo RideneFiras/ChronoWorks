@@ -20,8 +20,12 @@ create temporary table if not exists rls_results (
   detail     text
 );
 truncate rls_results restart identity;
-grant all on rls_results to authenticated;
-grant usage, select on sequence rls_results_n_seq to authenticated;
+-- The script records its findings while impersonating each role, so every role
+-- it switches into needs to be able to write to this table. anon included: the
+-- signed-out checks record their result from inside an exception handler, which
+-- still runs as anon.
+grant all on rls_results to authenticated, anon;
+grant usage, select on sequence rls_results_n_seq to authenticated, anon;
 
 do $$
 declare
