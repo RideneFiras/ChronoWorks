@@ -48,6 +48,8 @@ declare
   v_year    int := extract(year from current_date)::int;
 
   v_buyer   text;
+  v_ok      boolean;
+  v_err     text;
 begin
   -- ------------------------------------------------------------------ setup
   insert into auth.users
@@ -272,25 +274,44 @@ begin
   end;
 
   -- 11. storage paths
+  --
+  -- Each write is undone by raising inside its own sub-block, which rolls the
+  -- row back. Supabase refuses a direct delete from storage.objects (see
+  -- storage.protect_delete), so a write that is allowed to stand cannot be
+  -- cleaned up from SQL afterwards. PL/pgSQL variables are not transactional,
+  -- so the outcome survives the rollback and is recorded once we are out.
+  v_ok := false;
+  v_err := null;
   begin
     insert into storage.objects (bucket_id, name, owner)
     values ('invoices', ua::text || '/' || v_inv::text || '.pdf', ua);
-    insert into rls_results (area, check_name, ok, detail)
-    values ('storage', 'a user can write in their own folder', true, 'invoices/{uid}/...');
+    v_ok := true;
+    raise exception 'chrono_undo';
   exception when others then
-    insert into rls_results (area, check_name, ok, detail)
-    values ('storage', 'a user can write in their own folder', false, sqlerrm);
+    if sqlerrm <> 'chrono_undo' then
+      v_ok := false;
+      v_err := sqlerrm;
+    end if;
   end;
+  insert into rls_results (area, check_name, ok, detail)
+  values ('storage', 'a user can write in their own folder', v_ok,
+          coalesce(v_err, 'invoices/{uid}/..., rolled back'));
 
+  v_ok := false;
+  v_err := null;
   begin
     insert into storage.objects (bucket_id, name, owner)
     values ('invoices', ub::text || '/stolen.pdf', ua);
-    insert into rls_results (area, check_name, ok, detail)
-    values ('storage', 'writing in another user''s folder is refused', false, 'the insert went through');
+    v_err := 'the insert went through';
+    raise exception 'chrono_undo';
   exception when others then
-    insert into rls_results (area, check_name, ok, detail)
-    values ('storage', 'writing in another user''s folder is refused', true, sqlerrm);
+    if sqlerrm <> 'chrono_undo' then
+      v_ok := true;
+      v_err := sqlerrm;
+    end if;
   end;
+  insert into rls_results (area, check_name, ok, detail)
+  values ('storage', 'writing in another user''s folder is refused', v_ok, v_err);
 
   -- =======================================================================
   -- as user B: none of A's data exists
@@ -447,7 +468,7 @@ begin
   execute 'reset role';
   perform set_config('request.jwt.claims', '', true);
   perform set_config('app.allow_locked_changes', 'on', true);
-  delete from storage.objects where name like ua::text || '%' or name like ub::text || '%';
+  -- no storage rows to remove: every write above was rolled back
   delete from auth.users where id in (ua, ub);
   perform set_config('app.allow_locked_changes', 'off', true);
 
