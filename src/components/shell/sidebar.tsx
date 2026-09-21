@@ -27,7 +27,7 @@ const items = [
   { href: "/", key: "week", Icon: CalendarDays, ready: true },
   { href: "/projects", key: "projects", Icon: Briefcase, ready: true },
   { href: "/clients", key: "clients", Icon: Users, ready: true },
-  { href: "/invoices", key: "invoices", Icon: FileText, ready: false },
+  { href: "/invoices", key: "invoices", Icon: FileText, ready: true },
   { href: "/leave", key: "leave", Icon: TreePalm, ready: true },
   { href: "/settings", key: "settings", Icon: Settings, ready: true },
 ] as const;

@@ -85,8 +85,12 @@ function separators(locale: AppLocale): { group: string; decimal: string } {
     useGrouping: true,
     minimumFractionDigits: 1,
   }).formatToParts(1234.5);
+  const group = parts.find((p) => p.type === "group")?.value ?? ",";
   return {
-    group: parts.find((p) => p.type === "group")?.value ?? ",",
+    // French grouping is U+202F NARROW NO-BREAK SPACE, which Hanken Grotesk
+    // has no glyph for: the invoice PDF dropped it and amounts ran into the
+    // next column. U+00A0 is the same convention and is in the font.
+    group: group === " " ? " " : group,
     decimal: parts.find((p) => p.type === "decimal")?.value ?? ".",
   };
 }
