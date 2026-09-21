@@ -77,14 +77,24 @@ export function formatDays(minutes: number, hoursPerDay: number, locale: string)
   return `${text} d`;
 }
 
-/** What a cell shows: days on daily-rate projects, hours everywhere else. */
+/**
+ * What a cell shows.
+ *
+ * Day-rate projects are read in days (DESIGN.md section 6), but only once
+ * there is a whole day to show: half an afternoon rendered as "0,19 d" is not
+ * something anyone reads at a glance, so anything under a full day stays in
+ * hours. Hourly and fixed projects are always hours.
+ */
 export function formatDuration(
   minutes: number,
   { hoursPerDay, allowDays }: DurationContext,
   locale: string,
 ): string {
   if (minutes <= 0) return "";
-  return allowDays ? formatDays(minutes, hoursPerDay, locale) : formatHours(minutes);
+  if (!allowDays) return formatHours(minutes);
+  return minutes >= hoursPerDay * 60
+    ? formatDays(minutes, hoursPerDay, locale)
+    : formatHours(minutes);
 }
 
 /** Minutes to a decimal quantity string for an invoice line. */
