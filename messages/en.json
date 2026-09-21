@@ -341,5 +341,26 @@
     "columnNotEmpty": "Move or delete its tasks first.",
     "saved": "Task saved",
     "date": "Date"
+  },
+  "tour": {
+    "skip": "Skip",
+    "next": "Continue",
+    "done": "Start using Chrono",
+    "back": "Back",
+    "step": "{current} of {total}",
+    "restart": "Show the walkthrough again",
+    "restarted": "Walkthrough restarted",
+    "settingsTitle": "Start in Settings",
+    "settingsBody": "Your legal name, address and tax identifier are copied onto every invoice you issue. Fill them in before you invoice anyone.",
+    "clientsTitle": "Add a client",
+    "clientsBody": "Everything hangs off a client: projects, time and invoices. Their currency and invoice language are set here.",
+    "projectsTitle": "Create a project",
+    "projectsBody": "A project belongs to a client and carries the rate: a day rate, an hourly rate, or a fixed price.",
+    "weekTitle": "Log your time",
+    "weekBody": "Click a cell and type 2, 2h, 1h30 or 90m. Enter saves it, Tab moves to the next day.",
+    "timerTitle": "Or run the timer",
+    "timerBody": "Start it against a project and stopping it writes the entry into the week for you.",
+    "invoicesTitle": "Invoice the time",
+    "invoicesBody": "Pick a client and a period, and unbilled time becomes invoice lines. Issuing locks the invoice for good."
   }
 }

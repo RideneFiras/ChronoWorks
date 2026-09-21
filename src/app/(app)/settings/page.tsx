@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SettingsForm } from "./settings-form";
 import { DangerZone } from "./danger-zone";
 import { LogoUpload } from "./logo-upload";
+import { RestartTour } from "./restart-tour";
 
 export default async function SettingsPage() {
   const t = await getTranslations("settings");
@@ -28,6 +29,10 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsForm profile={profile} />
+
+      <div className="mt-8 border-t border-line pt-6">
+        <RestartTour />
+      </div>
 
       <div className="mt-8">
         <DangerZone />

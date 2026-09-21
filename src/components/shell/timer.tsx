@@ -140,7 +140,7 @@ export function Timer({
 
   if (!running) {
     return (
-      <div className="relative flex items-center gap-3">
+      <div className="relative flex items-center gap-3" data-tour="timer">
         {/* The dial alone says nothing to someone opening Chrono for the
             first time, so the verb sits next to it until a timer is running. */}
         <button
@@ -197,7 +197,7 @@ export function Timer({
   const circumference = 2 * Math.PI * radius;
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3" data-tour="timer">
       <button
         type="button"
         onClick={stop}

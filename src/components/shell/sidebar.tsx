@@ -46,6 +46,7 @@ export function Sidebar({ displayName }: { displayName: string }) {
           <Link
             key={href}
             href={href}
+            data-tour={key}
             aria-current={active ? "page" : undefined}
             onClick={() => setOpen(false)}
             className={cn(

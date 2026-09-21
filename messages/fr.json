@@ -341,5 +341,26 @@
     "columnNotEmpty": "Déplacez ou supprimez d'abord ses tâches.",
     "saved": "Tâche enregistrée",
     "date": "Date"
+  },
+  "tour": {
+    "skip": "Passer",
+    "next": "Continuer",
+    "done": "Commencer",
+    "back": "Retour",
+    "step": "{current} sur {total}",
+    "restart": "Revoir la visite guidée",
+    "restarted": "Visite guidée relancée",
+    "settingsTitle": "Commencez par les paramètres",
+    "settingsBody": "Votre raison sociale, votre adresse et votre identifiant fiscal sont recopiés sur chaque facture émise. Renseignez-les avant de facturer.",
+    "clientsTitle": "Ajoutez un client",
+    "clientsBody": "Tout part du client : les projets, le temps et les factures. Sa devise et la langue de ses factures se règlent ici.",
+    "projectsTitle": "Créez un projet",
+    "projectsBody": "Un projet appartient à un client et porte le tarif : TJM, taux horaire ou forfait.",
+    "weekTitle": "Saisissez votre temps",
+    "weekBody": "Cliquez dans une case et tapez 2, 2h, 1h30 ou 90m. Entrée enregistre, Tab passe au jour suivant.",
+    "timerTitle": "Ou lancez le minuteur",
+    "timerBody": "Démarrez-le sur un projet : à l'arrêt, la saisie est écrite dans la semaine.",
+    "invoicesTitle": "Facturez le temps",
+    "invoicesBody": "Choisissez un client et une période : le temps non facturé devient des lignes. L'émission verrouille la facture définitivement."
   }
 }
