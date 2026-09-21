@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Section } from "@/components/ui/page";
 import type { ClientRow, ProjectRow } from "@/lib/database.types";
-import {
-  createProject,
-  emptyProjectState,
-  updateProject,
-  type ProjectFormState,
-} from "./actions";
+import { createProject, updateProject } from "./actions";
+import { emptyFormState, type FormState } from "@/lib/form-state";
 
 export function ProjectForm({
   project,
@@ -27,9 +23,9 @@ export function ProjectForm({
   const tCommon = useTranslations("common");
   const editing = Boolean(project);
 
-  const [state, action, pending] = useActionState<ProjectFormState, FormData>(
+  const [state, action, pending] = useActionState<FormState, FormData>(
     editing ? updateProject : createProject,
-    emptyProjectState,
+    emptyFormState,
   );
 
   // A new project starts in its client's currency; the user can still change it.

@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Section } from "@/components/ui/page";
 import type { ProfileRow } from "@/lib/database.types";
-import { emptyState, saveSettings } from "./actions";
+import { saveSettings } from "./actions";
+import { emptyFormState } from "@/lib/form-state";
 
 export function SettingsForm({ profile }: { profile: ProfileRow }) {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
-  const [state, action, pending] = useActionState(saveSettings, emptyState);
+  const [state, action, pending] = useActionState(saveSettings, emptyFormState);
 
   const taxIdHint =
     profile.tax_profile === "tn"

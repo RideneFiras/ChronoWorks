@@ -6,14 +6,8 @@ import { getTranslations } from "next-intl/server";
 import { LOCALE_COOKIE, isLocale, type Locale } from "@/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import type { Currency, TaxProfile } from "@/lib/database.types";
+import type { FormState } from "@/lib/form-state";
 
-export interface FormState {
-  status: "idle" | "saved" | "error";
-  errors: Record<string, string>;
-  message?: string;
-}
-
-export const emptyState: FormState = { status: "idle", errors: {} };
 
 const CURRENCIES: Currency[] = ["TND", "EUR", "USD"];
 const TAX_PROFILES: TaxProfile[] = ["tn", "fr", "eu_generic"];

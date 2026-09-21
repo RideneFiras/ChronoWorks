@@ -5,14 +5,8 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { AppLocale, Currency } from "@/lib/database.types";
+import type { FormState } from "@/lib/form-state";
 
-export interface ClientFormState {
-  status: "idle" | "error";
-  errors: Record<string, string>;
-  message?: string;
-}
-
-export const emptyClientState: ClientFormState = { status: "idle", errors: {} };
 
 const CURRENCIES: Currency[] = ["TND", "EUR", "USD"];
 const LOCALES: AppLocale[] = ["fr", "en"];
@@ -55,9 +49,9 @@ async function readForm(form: FormData) {
 }
 
 export async function createClientRecord(
-  _prev: ClientFormState,
+  _prev: FormState,
   form: FormData,
-): Promise<ClientFormState> {
+): Promise<FormState> {
   const t = await getTranslations("errors");
   const { errors, values } = await readForm(form);
   if (Object.keys(errors).length > 0) return { status: "error", errors };
@@ -82,9 +76,9 @@ export async function createClientRecord(
 }
 
 export async function updateClientRecord(
-  _prev: ClientFormState,
+  _prev: FormState,
   form: FormData,
-): Promise<ClientFormState> {
+): Promise<FormState> {
   const t = await getTranslations("errors");
   const id = form.get("id");
   if (typeof id !== "string") return { status: "error", errors: {}, message: t("notFound") };

@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Section } from "@/components/ui/page";
 import type { ClientRow } from "@/lib/database.types";
-import {
-  createClientRecord,
-  emptyClientState,
-  updateClientRecord,
-  type ClientFormState,
-} from "./actions";
+import { createClientRecord, updateClientRecord } from "./actions";
+import { emptyFormState, type FormState } from "@/lib/form-state";
 
 export function ClientForm({
   client,
@@ -26,9 +22,9 @@ export function ClientForm({
   const tSettings = useTranslations("settings");
   const editing = Boolean(client);
 
-  const [state, action, pending] = useActionState<ClientFormState, FormData>(
+  const [state, action, pending] = useActionState<FormState, FormData>(
     editing ? updateClientRecord : createClientRecord,
-    emptyClientState,
+    emptyFormState,
   );
 
   return (

@@ -6,14 +6,8 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseAmount, toColumn } from "@/lib/money";
 import type { Currency, ProjectStatus, RateType } from "@/lib/database.types";
+import type { FormState } from "@/lib/form-state";
 
-export interface ProjectFormState {
-  status: "idle" | "error";
-  errors: Record<string, string>;
-  message?: string;
-}
-
-export const emptyProjectState: ProjectFormState = { status: "idle", errors: {} };
 
 const CURRENCIES: Currency[] = ["TND", "EUR", "USD"];
 const RATE_TYPES: RateType[] = ["daily", "hourly", "fixed"];
@@ -71,9 +65,9 @@ async function readForm(form: FormData) {
 }
 
 export async function createProject(
-  _prev: ProjectFormState,
+  _prev: FormState,
   form: FormData,
-): Promise<ProjectFormState> {
+): Promise<FormState> {
   const t = await getTranslations("errors");
   const { errors, values } = await readForm(form);
   if (Object.keys(errors).length > 0) return { status: "error", errors };
@@ -94,9 +88,9 @@ export async function createProject(
 }
 
 export async function updateProject(
-  _prev: ProjectFormState,
+  _prev: FormState,
   form: FormData,
-): Promise<ProjectFormState> {
+): Promise<FormState> {
   const t = await getTranslations("errors");
   const id = form.get("id");
   if (typeof id !== "string") return { status: "error", errors: {}, message: t("notFound") };
