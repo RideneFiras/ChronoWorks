@@ -1,18 +1,93 @@
 # Chrono
 
-One place where a freelancer manages clients, projects, time, tasks, leave and
-invoices. A task links to time, time links to an invoice, leave links to the
-calendar and to working-day counts.
+One place where a freelancer runs the business side of their work: clients,
+projects, time, tasks, leave and invoices, all linked.
 
-Read [`PRD.md`](PRD.md) for what it does, [`DESIGN.md`](DESIGN.md) for every
-visual decision, and [`CLAUDE.md`](CLAUDE.md) for the rules the code follows.
+![The Week grid](docs/screenshots/week-grid.jpg)
+
+## Why this exists
+
+A freelancer working alone usually ends up with a Google Sheet for hours, Trello
+for tasks, and Word or Canva for invoices. Nothing knows about anything else, so
+the same hour gets typed three times and the invoice is assembled by hand at the
+end of the month, from memory.
+
+Chrono is the version where those things are one system:
+
+- a **task** has a "log time" button, and the entry it writes remembers the task
+- **time** becomes invoice lines, and issuing the invoice locks that time so it
+  cannot drift afterwards
+- a **project's rate** is copied onto the invoice line when the line is made, so
+  raising your rate next year does not rewrite last year's invoice
+- **leave** hatches the week grid and is left out of working-day counts
+- a **client's** billing details are snapshotted onto the invoice at issue time,
+  so editing the client later cannot alter a document you already sent
+
+It is built for **Tunisia and France** first: TND with three decimals alongside
+EUR with two, matricule fiscal and SIRET, stamp duty and withholding tax, and the
+EU reverse-charge mention when it applies. The interface is French and English.
+
+## The rule that shapes everything
+
+**The database is the referee, not the UI.**
+
+Row-level security, constraints and triggers do the enforcing, so a bug in the
+app cannot produce a wrong invoice or leak another user's data:
+
+- every table has RLS with `user_id = auth.uid()`, and child rows use composite
+  foreign keys so a row cannot reference another account's data even by accident
+- an issued invoice is frozen by a trigger: its fields, its lines and the time
+  entries behind it all refuse to change
+- `issue_invoice()` is the only way to issue one. It assigns a gapless number per
+  year, recomputes the totals from the lines, and snapshots both parties
+- money is `numeric` in Postgres and scaled `bigint` in code, never a float
+
+[`supabase/tests/rls_check.sql`](supabase/tests/rls_check.sql) proves it. It
+creates two throwaway users, has one build a full workload, then tries every way
+it can to reach that data as the other user and as a signed-out visitor.
+
+```
+46 checks, 0 failed — RLS check passed
+```
+
+## What it looks like
+
+**Week grid.** Rows are projects, columns are days. Click a cell and type `2`,
+`2h`, `1h30` or `90m`. Today gets a single teal line across the top of its
+column. Underneath, unbilled time is totalled per currency.
+
+**Board.** One kanban per project, drag and drop with a keyboard alternative on
+every card. "Saisir du temps" writes a time entry against that task.
+
+![Board](docs/screenshots/board.jpg)
+
+**Invoices.** Build from unbilled time or by hand, then issue. After that it is
+read-only and the numbering is gapless.
+
+![Invoice](docs/screenshots/invoice.jpg)
+
+**The PDF.** White paper, not the dark theme, because people print these.
+
+![Invoice PDF](docs/screenshots/invoice-pdf.jpg)
+
+**Leave.** Month calendar plus a list, feeding the week grid.
+
+![Leave](docs/screenshots/leave.jpg)
+
+**First run.** A six step walkthrough that starts in Settings, because your legal
+name and tax identifier end up on every invoice.
+
+![Walkthrough](docs/screenshots/walkthrough.jpg)
 
 ## Stack
 
-Next.js (App Router) · TypeScript · Tailwind v4 · Supabase (Postgres, Auth,
-Storage) · dnd-kit · `@react-pdf/renderer` · `next-intl`.
+Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase (Postgres, Auth,
+Storage) · dnd-kit · `@react-pdf/renderer` · `next-intl`
 
-## Local setup
+Tailwind's default palette and type scale are cleared in `@theme`, so a colour or
+size that is not in [`DESIGN.md`](DESIGN.md) does not compile.
+
+## Running it
 
 ### 1. Install
 
@@ -20,59 +95,42 @@ Storage) · dnd-kit · `@react-pdf/renderer` · `next-intl`.
 npm install
 ```
 
-### 2. Create a Supabase project
+### 2. A Supabase project
 
-There is no Docker-based local stack here, so this uses a hosted project.
-Create one at [supabase.com/dashboard](https://supabase.com/dashboard); a region
-near your users is best (`eu-west-3` Paris suits Tunisia and France).
+Create one at [supabase.com/dashboard](https://supabase.com/dashboard). There is
+no Docker-based local stack here, so this uses a hosted project.
 
-### 3. Apply the schema
-
-SQL Editor → New query → paste **all** of
+SQL Editor → paste all of
 [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) → Run.
-
 It is not idempotent: run it once, on a fresh project. It creates 12 tables with
-RLS enabled, the triggers, `issue_invoice()`, `delete_account()`, and the two
-private storage buckets.
+RLS, the triggers, `issue_invoice()`, `delete_account()`, and two private storage
+buckets.
 
-Afterwards, check in the dashboard:
+Afterwards the Table Editor should show 12 tables each with the green **RLS
+enabled** badge, and Storage should show `invoices` and `logos`, both private.
 
-- Table Editor shows 12 tables, each with the green **RLS enabled** badge
-- Storage shows `invoices` and `logos`, both **not** public
+### 3. Google sign-in
 
-Later schema changes go in `supabase/migrations/0002_*.sql` and so on. Never
-edit a migration that has been applied.
+**Google Cloud Console** → Credentials → OAuth client ID → Web application:
 
-### 4. Google sign-in
+| Field | Value |
+|---|---|
+| Authorised JavaScript origins | `https://<your-ref>.supabase.co`, `http://localhost:3000` |
+| Authorised redirect URIs | `https://<your-ref>.supabase.co/auth/v1/callback` |
 
-**In [Google Cloud Console](https://console.cloud.google.com):**
+That redirect URI is Supabase's callback, not this app's. Getting it wrong is the
+usual cause of `redirect_uri_mismatch`. The External/Internal choice now lives
+under **Google Auth Platform → Audience**; while the app is in Testing, only
+addresses listed there can sign in.
 
-1. APIs & Services → **OAuth consent screen**. In the current console this
-   page is called **Google Auth Platform**, and the External/Internal choice
-   lives under **Audience**. If your Google account is not part of a Google
-   Workspace organisation there is no Internal option at all, so the project is
-   External already and you will not be offered the choice.
-2. While the app is in **Testing**, only addresses listed under
-   **Audience → Test users** can sign in. Add your own address, and the second
-   address you will use to check that RLS blocks another user.
-3. Credentials → Create credentials → **OAuth client ID** → Web application.
-   - Authorised JavaScript origins: `https://<your-ref>.supabase.co` and
-     `http://localhost:3000`
-   - Authorised redirect URIs: `https://<your-ref>.supabase.co/auth/v1/callback`
+**Supabase dashboard** → Authentication:
 
-   That redirect URI is Supabase's callback, not this app's. A wrong value here
-   is the usual cause of `redirect_uri_mismatch`.
+- Providers → **Google**: enable, paste the client ID and secret
+- Providers → **Email**: turn it off, this app is Google only
+- URL Configuration → Site URL `http://localhost:3000`, and add
+  `http://localhost:3000/auth/callback` to Redirect URLs
 
-**In the Supabase dashboard:**
-
-4. Authentication → Providers → **Google**: enable it, paste the client ID and
-   secret, Save. Until you do, the sign-in button reports that the provider is
-   off, and `/auth/v1/settings` on your project reports `"google": false`.
-5. Authentication → URL Configuration:
-   - Site URL: `http://localhost:3000`
-   - Redirect URLs: add `http://localhost:3000/auth/callback`
-
-### 5. Environment
+### 4. Environment
 
 ```bash
 cp .env.example .env.local
@@ -81,109 +139,81 @@ cp .env.example .env.local
 | Variable | Where it comes from |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API Keys → the `anon` / publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Optional, only used by `npm run seed`. Never imported by app code. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API Keys → the `anon` key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Optional, only for `npm run seed`. Never imported by app code. |
 
-`.env.local` and `.env` are both gitignored. The service role key is server-only
-and must never gain a `NEXT_PUBLIC_` prefix.
+The anon key is meant to be public: RLS is what protects the data. The service
+role key is not, and must never gain a `NEXT_PUBLIC_` prefix.
 
-### 6. Run
+### 5. Run
 
 ```bash
 npm run dev
 ```
 
-Open <http://localhost:3000>. You will be redirected to `/sign-in`.
-
-## Checks
+## Commands
 
 ```bash
-npm run typecheck   # tsc --noEmit
-npm run lint        # eslint
-npm run build       # next build
-npm run verify      # the live project: providers, RLS, schema, buckets
+npm run dev        # dev server
+npm run typecheck  # tsc --noEmit
+npm run lint       # eslint
+npm run build      # next build
+npm run verify     # checks the live Supabase project
+npm run seed       # realistic data for the signed-in account
 ```
 
-`npm run verify` talks to the Supabase project in your env file and reports
-whether Google is enabled, whether `anon` is refused on all 12 tables, whether
-the functions and buckets exist. Run it after changing anything in the
-dashboard.
+`npm run verify` reports whether Google is enabled, whether `anon` is refused on
+all 12 tables, and whether the functions and private buckets exist. Worth running
+after any dashboard change.
 
-## The RLS check
+`npm run seed` fills the account with a Tunisian and French freelancer's history:
+clients in TND and EUR, a project with a real two-month paused period, five weeks
+of time, leave with public holidays, a board with tasks, and draft invoices. Add
+`-- --reset` to clear first.
 
-The database is the referee, so it gets its own test.
+It seeds **drafts only**, on purpose. An invoice can only become issued through
+`issue_invoice()`, which needs a signed-in user, and the triggers refuse every
+shortcut, so issuing happens in the app, which exercises the numbering, the
+totals and the snapshot for real.
 
-SQL Editor → paste all of
-[`supabase/tests/rls_check.sql`](supabase/tests/rls_check.sql) → Run.
+## Deploying
 
-It creates two throwaway auth users, has one of them build a client, project,
-board, time entries, leave and two invoices, then tries every way it can think
-of to reach that data as the second user and as a signed-out visitor. It also
-checks the invoice locks: editing an issued invoice, deleting its lines,
-changing billed time, moving the status backwards. Both users are deleted at the
-end.
+The repository is connected to Vercel, so a push to `main` deploys.
 
-The last result grid must read **`RLS check passed`** with `failed = 0`.
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in the Vercel
+project, then add the deployed origin in two more places or sign-in will fail:
 
-Re-run it after every migration.
+- Supabase → Authentication → URL Configuration: Site URL, and
+  `https://<your-domain>/auth/callback` under Redirect URLs
+- Google Cloud Console → your OAuth client → Authorised JavaScript origins
 
-## Seed data
-
-```bash
-npm run seed              # the only account, or --email to choose one
-npm run seed -- --reset   # clear that account's rows first
-```
-
-Fills the signed-in account with a realistic freelancer's history: Tunisian and
-French clients, projects in TND and EUR including one with a real two-month
-paused period, logged time across five weeks, leave with public holidays and a
-half day, a board with tasks, and two draft invoices with lines.
-
-Requires `SUPABASE_SERVICE_ROLE_KEY`. Re-running is safe: clients are matched by
-name and updated rather than duplicated.
-
-**It seeds drafts, never an issued invoice.** An invoice can only become issued
-through `issue_invoice()`, which reads `auth.uid()` and so needs a signed-in
-user; the service role the script uses has none. The triggers refuse every
-shortcut: a row inserted as `issued` has unwritable lines, and promoting a draft
-by hand raises `Use issue_invoice() to issue an invoice`. So you issue the seeded
-draft from the app, which exercises the numbering, the recomputed totals and the
-seller and buyer snapshot for real.
-
-For the same reason `--reset` cannot remove an invoice you have already issued,
-or the client it points at. It keeps both and says so. To clear one out of a
-development database, lift the lock for one transaction in the SQL Editor:
-
-```sql
-begin;
-select set_config('app.allow_locked_changes', 'on', true);
-delete from invoices where number = 'FA-2026-0001';
-commit;
-```
-
-Never do that against real data: those rows are what the lock exists to protect.
+The Google redirect URI does not change: it always points at Supabase.
 
 ## Layout
 
 ```
 messages/            fr.json and en.json. All UI text lives here.
 src/app/             routes. (app)/ is everything behind sign-in.
-src/components/      ui/ primitives, shell/ the sidebar
-src/i18n/            next-intl request config and the locale cookie
-src/lib/             Supabase clients, money, durations, database types
+src/components/      ui/ primitives, shell/ sidebar, timer, walkthrough
+src/lib/             Supabase clients, money, durations, PDF, database types
 supabase/migrations/ schema, applied in order, never edited after the fact
 supabase/tests/      the RLS check
 ```
 
 ## Conventions
 
-- Money is `numeric` in Postgres and scaled `bigint` in code, never a float.
-  Use `src/lib/money.ts`.
-- Durations are whole minutes everywhere. Use `src/lib/duration.ts`.
-- Colours, sizes and radii come from the tokens in `src/app/globals.css`.
-  Tailwind's default palette and type scale are cleared, so anything outside
-  `DESIGN.md` fails to compile.
-- CSS logical properties only (`ms-`/`me-`, not `ml-`/`mr-`), so RTL can be
-  added later.
-- All strings go through `next-intl`. Both `messages/fr.json` and
-  `messages/en.json` must carry every key.
+- Money is scaled `bigint` in code, `numeric` in Postgres, never a float
+- Durations are whole minutes everywhere
+- Colours, sizes and radii come only from the tokens in `globals.css`
+- CSS logical properties (`ms-`/`me-`), so RTL can be added later
+- Every string goes through `next-intl`, and both locale files carry every key
+
+## Status
+
+The MVP in [`PRD.md`](PRD.md) is built: auth, clients, projects with status
+history, the week grid and timer, leave, boards, invoices with PDF and storage,
+settings, GDPR export and account deletion.
+
+Deliberately out of scope for v1: dashboards and revenue charts, quotes, expenses,
+recurring projects, invoice reminders, sending email, accountant export, light
+mode, Arabic and RTL, teams.
