@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+/* =============================================================================
+   Chrono tokens. DESIGN.md section 2, 3 and 4 are the only source.
+   The Tailwind defaults are cleared on purpose: a color, size or radius that is
+   not in DESIGN.md does not compile.
+   ========================================================================== */
+@theme {
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --font-*: initial;
+
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-inherit: inherit;
+
+  --color-night: #12132a;
+  --color-panel: #1a1c3a;
+  --color-raised: #232650;
+  --color-line: #2f3362;
+  --color-ink: #ece9f7;
+  --color-ink-muted: #9b9ec4;
+  --color-brass: #c8a04a;
+  --color-brass-tint: #332f49;
+  --color-time: #5fc9c1;
+  --color-green: #6fcf97;
+  --color-green-tint: #1f3a33;
+  --color-amber: #e6b84f;
+  --color-amber-tint: #3a3222;
+  --color-red: #f08a7e;
+  --color-red-tint: #43242d;
+
+  --font-display: var(--font-spectral), Georgia, serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+
+  --text-title: 26px;
+  --text-title--line-height: 34px;
+  --text-section: 16px;
+  --text-section--line-height: 24px;
+  --text-body: 14px;
+  --text-body--line-height: 22px;
+  --text-meta: 12px;
+  --text-meta--line-height: 16px;
+
+  --radius-control: 4px;
+  --radius-panel: 8px;
+}
+
+/* Spacing scale 4 / 8 / 12 / 16 / 24 / 32 / 48 = 1 / 2 / 3 / 4 / 6 / 8 / 12 */
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-night);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* One focus treatment everywhere: DESIGN.md section 5 and 10. */
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+    border-radius: var(--radius-control);
+  }
+
+  ::placeholder {
+    color: var(--color-ink-muted);
+  }
+
+  /* Numbers line up in tables and in the grid. */
+  input[type="number"],
+  input[inputmode="numeric"],
+  input[inputmode="decimal"] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* State changes only, 120ms. DESIGN.md section 7. */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [data-transition] {
+    transition-property: background-color, border-color, color, outline-color;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Leave days in the Week grid. DESIGN.md section 6. */
+  .hatched {
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 5px,
+      var(--color-line) 5px,
+      var(--color-line) 6px
+    );
+  }
+
+  /* Tables scroll inside their container at narrow widths. */
+  .scroll-x {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+}

@@ -39,8 +39,30 @@ Not used, do not add: Zod, Resend or any email sender, any auth provider other t
 
 ## Commands
 
-Fill in once the project is scaffolded: dev server, type check, lint, Supabase migration apply, seed.
+```
+npm run dev        dev server on http://localhost:3000
+npm run typecheck  tsc --noEmit
+npm run lint       eslint
+npm run build      next build
+npm run verify     check the live Supabase project: providers, RLS, schema, buckets
+npm run seed       fill the signed-in account with realistic data
+```
+
+Migrations are applied by hand: paste `supabase/migrations/000N_*.sql` into the
+Supabase SQL Editor. There is no Docker here, so `supabase start` is not
+available. After any migration, re-run `supabase/tests/rls_check.sql` in the
+same editor; it must end with `RLS check passed`.
 
 ## Seed data
 
 Use realistic freelancer data (clients, projects with paused periods, leave, mixed currencies). Never "John Doe" or "Acme".
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
