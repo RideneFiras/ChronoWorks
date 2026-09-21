@@ -209,39 +209,68 @@ export type InvoiceCounterRow = {
   last_number: number;
 }
 
-/** Columns the database fills in for us on insert. */
-type Generated =
-  | "id"
-  | "user_id"
-  | "created_at"
-  | "updated_at"
-  | "line_total";
+/** Columns the database always fills in for us. */
+type Generated = "id" | "user_id" | "created_at" | "updated_at" | "line_total";
 
-type Insert<T> = Omit<T, Extract<keyof T, Generated>> &
-  Partial<Pick<T, Extract<keyof T, Generated>>>;
+/** Any column that accepts null is optional on insert. */
+type NullableKeys<T> = {
+  [K in keyof T]-?: null extends T[K] ? K : never;
+}[keyof T];
 
-type Table<Row> = {
+/**
+ * Optional on insert = generated, nullable, or NOT NULL with a default.
+ * `Defaults` lists the last group per table, taken from 0001_init.sql.
+ */
+type Insert<T, Defaults extends keyof T = never> = Omit<
+  T,
+  NullableKeys<T> | Extract<keyof T, Generated> | Defaults
+> &
+  Partial<Pick<T, NullableKeys<T> | Extract<keyof T, Generated> | Defaults>>;
+
+type Table<Row, Defaults extends keyof Row = never> = {
   Row: Row;
-  Insert: Insert<Row>;
-  Update: Partial<Insert<Row>>;
+  Insert: Insert<Row, Defaults>;
+  Update: Partial<Insert<Row, Defaults>>;
   Relationships: [];
 };
 
 export type Database = {
   public: {
     Tables: {
-      profiles: Table<ProfileRow>;
-      clients: Table<ClientRow>;
-      projects: Table<ProjectRow>;
-      project_status_history: Table<ProjectStatusHistoryRow>;
+      profiles: Table<
+        ProfileRow,
+        | "locale"
+        | "default_currency"
+        | "tax_profile"
+        | "invoice_prefix"
+        | "payment_terms_days"
+        | "hours_per_day"
+      >;
+      clients: Table<ClientRow, "currency" | "invoice_language">;
+      projects: Table<ProjectRow, "status" | "rate_type" | "rate_amount" | "currency">;
+      project_status_history: Table<ProjectStatusHistoryRow, "changed_on">;
       boards: Table<BoardRow>;
-      board_columns: Table<BoardColumnRow>;
-      tasks: Table<TaskRow>;
-      time_entries: Table<TimeEntryRow>;
-      leaves: Table<LeaveRow>;
-      invoices: Table<InvoiceRow>;
-      invoice_lines: Table<InvoiceLineRow>;
-      invoice_counters: Table<InvoiceCounterRow>;
+      board_columns: Table<BoardColumnRow, "position">;
+      tasks: Table<TaskRow, "position">;
+      time_entries: Table<TimeEntryRow, "entry_date" | "is_billable">;
+      leaves: Table<LeaveRow, "type" | "start_half" | "end_half">;
+      invoices: Table<
+        InvoiceRow,
+        | "kind"
+        | "status"
+        | "issue_date"
+        | "due_date"
+        | "currency"
+        | "language"
+        | "tax_profile"
+        | "subtotal"
+        | "tax_total"
+        | "stamp_duty"
+        | "withholding"
+        | "total"
+      >;
+      invoice_lines: Table<InvoiceLineRow, "position" | "unit" | "tax_rate">;
+      invoice_counters: Table<InvoiceCounterRow, "last_number">;
     };
     Views: Record<never, never>;
     Functions: {
