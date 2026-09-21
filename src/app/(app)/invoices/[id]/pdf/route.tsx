@@ -72,6 +72,15 @@ export async function GET(
     { reverseCharge: t("reverseCharge"), latePenalty: t("latePenalty") },
   );
 
+  // The path comes from the snapshot, so a logo changed later never alters an
+  // invoice that was already issued.
+  let logo: Buffer | null = null;
+  const logoPath = invoice.seller_snapshot?.logo_path;
+  if (typeof logoPath === "string" && logoPath !== "") {
+    const { data } = await supabase.storage.from("logos").download(logoPath);
+    if (data) logo = Buffer.from(await data.arrayBuffer());
+  }
+
   const buffer = await renderToBuffer(
     <InvoiceDocument
       invoice={invoice}
@@ -79,6 +88,7 @@ export async function GET(
       strings={strings}
       locale={locale}
       mentions={mentions}
+      logo={logo}
     />,
   );
 

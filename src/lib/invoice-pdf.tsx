@@ -1,6 +1,7 @@
 import {
   Document,
   Font,
+  Image,
   Page,
   StyleSheet,
   Text,
@@ -86,6 +87,7 @@ const styles = StyleSheet.create({
   },
   headerRow: { flexDirection: "row", justifyContent: "space-between" },
   sellerBlock: { width: "55%" },
+  logo: { height: 36, maxWidth: 160, objectFit: "contain", marginBottom: 8 },
   titleBlock: { width: "40%", alignItems: "flex-end" },
   title: { fontFamily: "Spectral", fontWeight: 600, fontSize: 20, lineHeight: 1.2, marginBottom: 4 },
   rule: { borderBottomWidth: 1, borderBottomColor: RULE, marginTop: 14, marginBottom: 18 },
@@ -179,12 +181,15 @@ export function InvoiceDocument({
   strings,
   locale,
   mentions,
+  logo,
 }: {
   invoice: InvoiceRow;
   lines: InvoiceLineRow[];
   strings: Strings;
   locale: AppLocale;
   mentions: string[];
+  /** The user's own logo, as bytes. DESIGN.md section 9: theirs, never ours. */
+  logo?: Buffer | null;
 }) {
   registerFonts();
 
@@ -214,6 +219,10 @@ export function InvoiceDocument({
       <Page size="A4" style={styles.page}>
         <View style={styles.headerRow}>
           <View style={styles.sellerBlock}>
+            {/* react-pdf's Image, not an HTML img: a PDF image has no alt
+                attribute, so the a11y rule does not apply here. */}
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            {logo ? <Image src={logo} style={styles.logo} /> : null}
             <Text style={styles.strong}>{line(seller, "legal_name") ?? ""}</Text>
             {line(seller, "address")
               ?.split("\n")
